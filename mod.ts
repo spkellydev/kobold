@@ -1,9 +1,6 @@
 import {
   stat,
   open,
-  resources,
-  DenoError,
-  ErrorKind,
   readFile,
   Reader,
   Closer
@@ -26,14 +23,6 @@ type Middleware = Handler | PathHandler;
 type Query = { [key: string]: string | string[] };
 type Params = { [key: string]: string };
 type PathMatcher = (pattern: string) => (path: string) => Params;
-
-export async function main() {
-  let app = new App();
-  app.get("/", async (req: Request, res: Response) => {
-    await res.json({ hello: "world" });
-  });
-  app.listen(8000, "0.0.0.0");
-}
 
 export const simplePathMatcher: PathMatcher = _pattern => {
   const pattern = _pattern.split("/");
@@ -110,13 +99,12 @@ export class Request {
   }
 }
 
-class Response {
+export class Response {
   status = 200;
   headers = new Headers();
   body?: string | Uint8Array | Reader;
   resources: Closer[] = [];
   toHttpResponse(): http.Response {
-    console.log(this.body, "body");
     let { status = 200, headers, body } = this;
     if (typeof body === "string") {
       body = new TextEncoder().encode(body);
@@ -124,6 +112,7 @@ class Response {
         headers.append("Content-Type", "text/plain");
       }
     }
+    
     return { status, headers, body };
   }
   close() {
@@ -169,6 +158,13 @@ class Response {
 
 export class App {
   middlewares: Middleware[] = [];
+  constructor() {
+    this.use(bodyParser.json());
+    this.use(bodyParser.urlencoded());
+  }
+  use(m: Middleware) {
+    this.middlewares.push(m);
+  }
   async listen(port: number, host = "0.0.0.0") {
     const s = http.serve(`${host}:${port}`);
     let abort = false;
@@ -177,7 +173,6 @@ export class App {
         if (abort) break;
         const req = new Request(incoming);
         const res = new Response();
-        console.log(this.middlewares, "middlewares");
         try {
           await runMiddlewares(this.middlewares, req, res);
         } catch (e) {
@@ -209,6 +204,18 @@ export class App {
   get(pattern, handle: EndHandler): void {
     this.addPathHandler("GET", pattern, handle);
   }
+  post(pattern, handle: EndHandler): void {
+    this.addPathHandler("POST", pattern, handle);
+  }
+  put(pattern, handle: EndHandler): void {
+    this.addPathHandler("PUT", pattern, handle);
+  }
+  patch(pattern, handle: EndHandler): void {
+    this.addPathHandler("PATCH", pattern, handle);
+  }
+  delete(pattern, handle: EndHandler): void {
+    this.addPathHandler("DELETE", pattern, handle);
+  }
 }
 
 async function runMiddlewares(
@@ -239,6 +246,7 @@ async function runMiddleware(
         req.params = params;
         await m.handle(req, res);
       } else {
+        // 404?
         next();
       }
     }
@@ -250,3 +258,56 @@ async function runMiddleware(
 function isPathHandler(m: Middleware): m is PathHandler {
   return typeof m !== "function";
 }
+
+export const bodyParser = {
+  json(): Middleware {
+    return async (req, res, next) => {
+      if (req.headers.get("Content-Type") === "application/json") {
+        try {
+          const body = await req.body();
+          const text = new TextDecoder().decode(body);
+          req.data = JSON.parse(text);
+        } catch (e) {
+          res.status = 400;
+          req.error = e;
+          return;
+        }
+      }
+      await next();
+    };
+  },
+  urlencoded(): Middleware {
+    return async (req, res, next) => {
+      if (
+        req.headers.get("Content-Type") === "application/x-www-form-urlencoded"
+      ) {
+        try {
+          const body = await req.body();
+          const text = new TextDecoder().decode(body);
+          const data = {};
+          for (let s of text.split("&")) {
+            const result = /^(.+?)=(.*)$/.exec(s);
+            if (result.length < 3) {
+              continue;
+            }
+            const key = decodeURIComponent(result[1].replace("+", " "));
+            const value = decodeURIComponent(result[2].replace("+", " "));
+            if (Array.isArray(data[key])) {
+              data[key] = [...data[key], value];
+            } else if (data[key]) {
+              data[key] = [data[key], value];
+            } else {
+              data[key] = value;
+            }
+          }
+          req.data = data;
+        } catch (e) {
+          res.status = 400;
+          req.error = e;
+          return;
+        }
+      }
+      await next();
+    };
+  }
+};
