@@ -15,7 +15,7 @@ async function main() {
         res.json(req.data);
     });
 
-    await app.listen(8000, "0.0.0.0");
+    await app.listen(8000, "0.0.0.0", () => console.log("port started on 8000"));
 }
 
 main();
