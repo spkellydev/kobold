@@ -5,6 +5,7 @@ import {
     equal
 } from "https://deno.land/x/testing/mod.ts";
 import { App, Request, Response } from '../mod.ts';
+import { exit } from 'deno';
 
 const dummyRequest = async (req: Request, res: Response) => {
     res.json({ hello: "world" });
@@ -23,5 +24,7 @@ test(async function app_launches() {
 });
 
 
-
-runTests();
+(async function() {
+    await runTests();
+    exit(1);
+})();
