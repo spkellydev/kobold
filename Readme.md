@@ -1,4 +1,4 @@
-# Kobold. An MVC Framework for Deno
+# Kobold. An API Framework for Deno
 ##### Work in Progress: Use at your own risk.
 [![Build Status](https://travis-ci.org/spkellydev/kobold.svg?branch=master)](https://travis-ci.org/spkellydev/kobold)
 Kobold is an Express like framework for building web applications. The goal of the project is to project a fully functional MVC framework for Deno with provides a familiar and easy interface for web programming.

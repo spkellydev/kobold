@@ -1,5 +1,5 @@
 import * as kobold from '../mod.ts';
-
+import { path } from '../deps.ts';
 type Request = kobold.Request;
 type Response = kobold.Response;
 
@@ -13,8 +13,10 @@ class DummyController implements kobold.KoboldController {
 
 async function main() {
     const app = new kobold.App();
+    let dir = path.resolve("./example/public")
+    app.use(kobold.use_static(dir))
     const dummy = new DummyController(app);
-    app.get("/", dummy.helloWorld);
+    app.get("/api", dummy.helloWorld);
     app.get("/other", async (req: Request, res: Response) => {
         res.json({ hello: "world" });
     });

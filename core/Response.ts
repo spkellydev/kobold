@@ -39,27 +39,31 @@ export default class Response {
         filePath: string,
         transform?: (src: string) => string
     ): Promise<void> {
-        const notModified = false;
-        if (notModified) {
-            this.status = 304;
-            return;
-        }
-        const extname = path.extname(filePath);
-        const contentType = lookup(extname.slice(1));
-        const fileInfo = await stat(filePath);
-        if (!fileInfo.isFile()) {
-            return;
-        }
-        this.headers.append("Content-Type", contentType);
-        if (transform) {
-            const bytes = await readFile(filePath);
-            let str = new TextDecoder().decode(bytes);
-            str = transform(str);
-            this.body = new TextEncoder().encode(str);
-        } else {
-            const file = await open(filePath);
-            this.resources.push(file);
-            this.body = file;
+        try {
+            const notModified = false;
+            if (notModified) {
+                this.status = 304;
+                return;
+            }
+            const extname = path.extname(filePath);
+            const contentType = lookup(extname.slice(1));
+            const fileInfo = await stat(filePath);
+            if (!fileInfo.isFile()) {
+                return;
+            }
+            this.headers.append("Content-Type", contentType);
+            if (transform) {
+                const bytes = await readFile(filePath);
+                let str = new TextDecoder().decode(bytes);
+                str = transform(str);
+                this.body = new TextEncoder().encode(str);
+            } else {
+                const file = await open(filePath);
+                this.resources.push(file);
+                this.body = file;
+            }
+        } catch (err) {
+            console.log(err, filePath);
         }
     }
 }

@@ -1,7 +1,9 @@
+import { ErrorKind, DenoError } from 'deno';
 import { isPathHandler } from './PathUtils.ts';
 import { Middleware, Next } from './types.ts';
 import Request from './Request.ts';
 import Response from './Response.ts';
+import { path } from '../deps.ts';
 
 export async function runMiddlewares(
     ms: Middleware[],
@@ -91,4 +93,19 @@ export const bodyParser = {
             await next();
         };
     }
+};
+
+export function use_static(dir: string): Middleware {
+    return async (req, res, next) => {
+      const filePath = path.join(dir, req.url.slice(1) || "index.html");
+      try {
+        await res.file(filePath);
+      } catch (e) {
+        if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+          await next();
+        } else {
+          throw e;
+        }
+      }
+    };
 };

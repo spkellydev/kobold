@@ -10,7 +10,8 @@ import {
   EndHandler,
   Middleware,
   Query,
-  KoboldController
+  KoboldController,
+  use_static
 } from './core/mod/index.ts';
 export {
   App,
@@ -24,7 +25,8 @@ export {
   EndHandler,
   Middleware,
   Query,
-  KoboldController
+  KoboldController,
+  use_static
 };
 
 export function Main(executor: Function) {

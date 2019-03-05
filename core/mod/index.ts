@@ -12,7 +12,7 @@ import {
     Query
 } from '../types.ts';
 import { KoboldController } from '../mvc/Controller.ts';
-
+import { use_static } from '../middlewares.ts';
 export {
     App,
     Request,
@@ -25,5 +25,6 @@ export {
     EndHandler,
     Middleware,
     Query,
-    KoboldController
+    KoboldController,
+    use_static
 };
