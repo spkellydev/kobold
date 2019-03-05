@@ -12,7 +12,6 @@ import {
     Query
 } from '../types.ts';
 import { KoboldController } from '../mvc/Controller.ts';
-import { RestController } from '../mvc/decorators.ts';
 
 export {
     App,
@@ -26,6 +25,5 @@ export {
     EndHandler,
     Middleware,
     Query,
-    KoboldController,
-    RestController
+    KoboldController
 };

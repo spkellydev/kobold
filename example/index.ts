@@ -1,5 +1,4 @@
 import * as kobold from '../mod.ts';
-import { RestController } from '../core/mvc/decorators.ts';
 
 type Request = kobold.Request;
 type Response = kobold.Response;
@@ -26,4 +25,4 @@ async function main() {
     await app.listen(8000, "0.0.0.0", () => console.log("port started on 8000"));
 }
 
-main();
+kobold.Main(main);

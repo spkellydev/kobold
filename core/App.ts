@@ -7,6 +7,7 @@ import { Middleware, Method, EndHandler } from './types.ts';
 
 export default class App {
     middlewares: Middleware[] = [];
+    private abort = false;
     constructor() {
         this.use(bodyParser.json());
         this.use(bodyParser.urlencoded());
@@ -15,10 +16,10 @@ export default class App {
         this.middlewares.push(m);
     }
     async listen(port: number, host = "0.0.0.0", callback?: Function) {
-        const s = http.serve(`${host}:${port}`);
+        const server = http.serve(`${host}:${port}`);
         let abort = false;
         const start = async () => {
-            for await (const incoming of s) {
+            for await (const incoming of server) {
                 if (abort) break;
                 const req = new Request(incoming);
                 const res = new Response();
@@ -36,13 +37,14 @@ export default class App {
                     res.close();
                 }
             }
+            console.log(server, abort);
         }
         async function close() {
             abort = true;
         }
         callback && callback();
-        await start();
-        return { port, close };
+        start();
+        return { close };
     }
     private addPathHandler(method: Method, pattern: string, handle: EndHandler) {
         this.middlewares.push({
