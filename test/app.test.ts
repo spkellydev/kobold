@@ -26,5 +26,5 @@ test(async function app_launches() {
 
 (async function() {
     await runTests();
-    exit(1);
+    exit();
 })();
